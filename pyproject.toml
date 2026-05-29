@@ -1,0 +1,21 @@
+[project]
+name = "stockmcpservice"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "coverage>=7.14.1",
+    "fastmcp>=3.3.1",
+    "isort>=8.0.1",
+    "mypy>=2.1.0",
+    "numpy>=2.4.6",
+    "pandas>=3.0.3",
+    "prefab-ui>=0.20.1",
+    "pytest>=9.0.3",
+    "pytest-asyncio>=1.4.0",
+    "ruff>=0.15.15",
+    "ta>=0.11.0",
+    "tox>=4.55.0",
+    "yfinance>=1.4.1",
+]
