@@ -8,7 +8,7 @@ description: |
   - The implementation approach isn't obvious from the task description alone
   - A previous code-developer output was incorrect or incomplete
   Skip this agent for trivial tasks (single function, clear I/O, no edge cases).
-model: opus
+model: sonnet
 tools:
   - Read
   - Glob
