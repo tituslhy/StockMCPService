@@ -30,20 +30,25 @@ You do not write implementation code.
    - Utilities or helpers already available
    - How yfinance data is currently shaped and passed around
 
-3. **Decide file structure** — for each logical unit of work, determine:
+3. **Decide tool vs app** — before touching files, determine:
+   - Does this feature need user interaction after render? → `FastMCPApp` in `ui/`
+   - Is it a one-shot fetch and display? → `@mcp.tool(app=True)` in `tools/`
+   - Spec must explicitly state which pattern and why
+
+4. **Decide file structure** — for each logical unit of work, determine:
    - Does it belong in an existing file or a new one?
    - Does it warrant its own class or is a module-level function enough?
    - Follow established conventions: one responsibility per file under `tools/`,
      UI app definitions under `ui/`, nothing business-logic in `main.py`
    - If a new file, name it after the primary responsibility (e.g. `tools/technical_analysis.py`)
 
-4. **Design the spec** — produce Python stubs: class/function skeletons with:
+5. **Design the spec** — produce Python stubs: class/function skeletons with:
    - Exact function signatures with type hints
    - Docstrings covering: what it does, args, return value, exceptions raised
    - Inline comments marking non-obvious logic or edge cases to handle
    - No implementation — stubs only (`...` as bodies)
 
-5. **Flag decisions** — if you made a structural or design choice that isn't
+6. **Flag decisions** — if you made a structural or design choice that isn't
    obvious, explain why in a short note after the relevant stub
 
 ## Output contract

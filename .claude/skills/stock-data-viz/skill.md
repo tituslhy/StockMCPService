@@ -14,8 +14,54 @@ description: |
 ## Library reference
 
 - Package: `prefab-ui` (pin version in pyproject.toml)
-- Docs: https://prefab.prefect.io/docs/components/charts.md
-- Full component index: https://prefab.prefect.io/docs/llms.txt
+- **Always resolve current API via context7 before writing any Prefab code**
+  Use: `get-library-docs prefab-ui` or `resolve-library-id prefab-ui`
+- Fallback docs: https://prefab.prefect.io/docs/llms.txt
+
+## Two rendering modes
+
+**Decision rule:**
+
+- LLM consumes the result as data → `@mcp.tool()`
+- LLM triggers a one-shot visual → `@mcp.tool(app=True)`
+- User interacts with the result after render → `FastMCPApp`
+
+### Normal tool (to be used by an LLM)
+
+```python
+@mcp.tool()
+def get_current_price(ticker: str, interval: str) -> PrefabApp:
+    ...
+```
+
+### Simple tool returning a prefab frontend (one-shot visual)
+
+```python
+@mcp.tool(app=True)
+def price_chart(ticker: str, interval: str) -> PrefabApp:
+    ...
+```
+
+### Full blown interactive prefab app (user-driven)
+
+```python
+from fastmcp import FastMCPApp
+from prefab_ui.actions import SetState, ShowToast
+from prefab_ui.actions.mcp import CallTool
+from prefab_ui.rx import RESULT, Rx
+
+app = FastMCPApp("StockDashboard")
+
+@app.tool()                          # UI-only, model never sees this
+def search_ticker(query: str) -> list[dict]:
+    ...
+
+@app.ui()                            # model sees this as the entry point
+def stock_dashboard() -> PrefabApp:
+    ...
+    # wire UI → backend with CallTool(fn_ref) not CallTool("string")
+    CallTool(search_ticker, result_key="results")
+```
 
 ## FastMCP integration pattern
 
