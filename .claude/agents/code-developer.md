@@ -6,7 +6,7 @@ description: |
   - A function, class, or module needs to be created or modified
   - Scaffolding, boilerplate, or wiring needs to happen
   Do NOT implement code in the main thread. Always delegate here.
-model: haiku
+model: sonnet
 tools:
   - Read
   - Write

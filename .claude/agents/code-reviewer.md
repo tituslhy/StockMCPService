@@ -7,7 +7,7 @@ description: |
   - A bug was fixed and the fix needs scrutiny
   - Security or performance concerns are raised
   Do NOT review code in the main thread. Always delegate here.
-model: haiku
+model: sonnet
 tools:
   - Read
   - Glob
