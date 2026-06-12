@@ -9,6 +9,8 @@
       "Bash(pytest:*)",
       "Bash(ruff:*)",
       "Bash(mypy:*)",
+      "Bash(isort:*)",
+      "Bash(coverage:*)",
       "Bash(fastmcp:*)",
       "Bash(git diff:*)",
       "Bash(git status:*)",
