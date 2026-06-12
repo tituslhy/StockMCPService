@@ -347,3 +347,117 @@ def test_fetch_ohlcv_date_range_path_calls_history_with_start_end(
     assert kwargs["end"] == date.fromisoformat(end)
     assert kwargs["interval"] == "1d"
     assert "period" not in kwargs
+
+
+# --------------------------------------------------------------------------- #
+# Additional tests for uncovered lines
+# --------------------------------------------------------------------------- #
+
+
+@patch("tools._data.yf.Ticker")
+def test_fetch_ohlcv_coerce_to_date_with_datetime(
+    mock_ticker_cls: MagicMock,
+) -> None:
+    """Test _coerce_to_date converts datetime to date (lines 205-206)."""
+    from datetime import datetime
+
+    mock_ticker = MagicMock()
+    mock_ticker.history.return_value = _make_mock_history_df()
+    mock_ticker_cls.return_value = mock_ticker
+
+    today = date.today()
+    start_dt = datetime(today.year, today.month, today.day - 10)
+    end_dt = datetime(today.year, today.month, today.day - 1)
+
+    result = fetch_ohlcv("AAPL", start=start_dt, end=end_dt)
+
+    assert result is not None
+    assert len(result) == 3
+
+
+@patch("tools._data.yf.Ticker")
+def test_fetch_ohlcv_coerce_to_date_with_date_object(
+    mock_ticker_cls: MagicMock,
+) -> None:
+    """Test _coerce_to_date handles date objects (line 207-208)."""
+    mock_ticker = MagicMock()
+    mock_ticker.history.return_value = _make_mock_history_df()
+    mock_ticker_cls.return_value = mock_ticker
+
+    today = date.today()
+    start = today - timedelta(days=10)
+    end = today - timedelta(days=1)
+
+    result = fetch_ohlcv("AAPL", start=start, end=end)
+
+    assert result is not None
+
+
+@patch("tools._data.yf.Ticker")
+def test_fetch_ohlcv_missing_ohlcv_columns_raises_ticker_not_found(
+    mock_ticker_cls: MagicMock,
+) -> None:
+    """Test KeyError → TickerNotFoundError mapping (line 364-365)."""
+    mock_ticker = MagicMock()
+    index = pd.date_range(end=date.today() - timedelta(days=1), periods=3, freq="D")
+    mock_ticker.history.return_value = pd.DataFrame(
+        {
+            "Open": [100.0, 101.0, 102.0],
+            "High": [105.0, 106.0, 107.0],
+        },
+        index=index,
+    )
+    mock_ticker_cls.return_value = mock_ticker
+
+    with pytest.raises(TickerNotFoundError) as exc_info:
+        fetch_ohlcv("AAPL", period="1mo")
+
+    assert "missing expected OHLCV columns" in exc_info.value.user_message
+
+
+@patch("tools._data.yf.Ticker")
+def test_fetch_ohlcv_both_start_end_must_be_provided_together(
+    mock_ticker_cls: MagicMock,
+) -> None:
+    """Test validation that start and end must be paired (lines 304-307)."""
+    today = date.today()
+
+    with pytest.raises(DataValidationError) as exc_info:
+        fetch_ohlcv("AAPL", start=(today - timedelta(days=10)).isoformat())
+
+    assert "Both" in exc_info.value.user_message
+
+    mock_ticker_cls.assert_not_called()
+
+
+@patch("tools._data.yf.Ticker")
+def test_fetch_ohlcv_cannot_mix_period_and_date_range(
+    mock_ticker_cls: MagicMock,
+) -> None:
+    """Test that period and date range are mutually exclusive (lines 309-312)."""
+    today = date.today()
+
+    with pytest.raises(DataValidationError) as exc_info:
+        fetch_ohlcv(
+            "AAPL",
+            start=(today - timedelta(days=10)).isoformat(),
+            end=today.isoformat(),
+            period="1mo",
+        )
+
+    assert "not both" in exc_info.value.user_message
+
+    mock_ticker_cls.assert_not_called()
+
+
+@patch("tools._data.yf.Ticker")
+def test_fetch_ohlcv_must_provide_date_range_or_period(
+    mock_ticker_cls: MagicMock,
+) -> None:
+    """Test that at least one of period/date-range must be provided (lines 314-317)."""
+    with pytest.raises(DataValidationError) as exc_info:
+        fetch_ohlcv("AAPL")
+
+    assert "either" in exc_info.value.user_message.lower()
+
+    mock_ticker_cls.assert_not_called()

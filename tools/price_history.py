@@ -180,6 +180,7 @@ def price_history(
                 )
                 Metric(label="Volume", value=f"{latest_volume:,}")
             Separator()
+            Text("Close Price")
             LineChart(
                 data=records,
                 series=[ChartSeries(data_key="close", label="Close")],  # type: ignore[call-arg]
@@ -187,6 +188,8 @@ def price_history(
                 show_legend=False,  # type: ignore[call-arg]
                 show_dots=False,  # type: ignore[call-arg]
             )
+            Separator()
+            Text("Volume")
             BarChart(
                 data=records,
                 series=[ChartSeries(data_key="volume", label="Volume")],  # type: ignore[call-arg]
@@ -194,6 +197,7 @@ def price_history(
                 show_legend=False,  # type: ignore[call-arg]
             )
             Separator()
+            Text("Price History")
             DataTable(
                 columns=[
                     DataTableColumn(key="date", header="Date", sortable=True),

@@ -416,7 +416,12 @@ def portfolio_dashboard() -> PrefabApp:
                 )
                 Metric(
                     label="Total P&L %",
-                    value=STATE.portfolio.total_pnl_pct.percent(),  # type: ignore[call-arg]
+                    # `total_pnl_pct` is already a percent-unit value (e.g.
+                    # 12.34 means "12.34%"), NOT a fraction -- prefab's
+                    # `.percent()` pipe multiplies by 100 (expects 0.1234),
+                    # which would render "1234.00%". Use `.number(2)` and
+                    # append the "%" sign ourselves instead.
+                    value=STATE.portfolio.total_pnl_pct.number(2) + "%",  # type: ignore[call-arg]
                 )
 
             Separator()
@@ -437,10 +442,20 @@ def portfolio_dashboard() -> PrefabApp:
                                 + holding.market_value.currency()
                             )
                             Text("P&L: " + holding.pnl.currency())  # type: ignore[attr-defined,arg-type]
-                            Text("P&L %: " + holding.pnl_pct.percent())  # type: ignore[attr-defined,arg-type]
+                            # `pnl_pct` / `allocation_pct` are already
+                            # percent-unit values (e.g. 12.34 means
+                            # "12.34%"), NOT fractions -- avoid prefab's
+                            # `.percent()` pipe (multiplies by 100) and
+                            # instead format as a plain number + "%".
+                            Text(
+                                "P&L %: "  # type: ignore[attr-defined,arg-type]
+                                + holding.pnl_pct.number(2)
+                                + "%"
+                            )
                             Text(
                                 "Allocation: "  # type: ignore[attr-defined,arg-type]
-                                + holding.allocation_pct.percent()
+                                + holding.allocation_pct.number(2)
+                                + "%"
                             )
                             with If(holding.price_error != None):  # noqa: E711  # type: ignore[attr-defined]
                                 Badge(holding.price_error, variant="destructive")  # type: ignore[attr-defined,call-overload]
@@ -458,6 +473,11 @@ def portfolio_dashboard() -> PrefabApp:
 
             # ----------------------------------------------------------- #
             # Allocation chart
+            #
+            # NOTE: No time-series AreaChart (stock-data-viz skill section
+            # 4) is rendered here -- holdings are in-memory only with no
+            # historical value series to plot. The "Total P&L %" Metric
+            # above serves as the yield/performance indicator instead.
             # ----------------------------------------------------------- #
             allocation_data = [
                 {

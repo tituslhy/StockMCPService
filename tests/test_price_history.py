@@ -264,3 +264,84 @@ def test_single_row_dataframe_has_zero_pct_change() -> None:
 
     assert change_metric["value"] == "+0.00%"
     assert change_metric.get("trend") == "neutral"
+
+
+# --------------------------------------------------------------------------- #
+# Additional tests for uncovered lines
+# --------------------------------------------------------------------------- #
+
+
+def test_prepare_records_empty_after_dropna() -> None:
+    """Test TickerNotFoundError when all rows are NaN (line 104)."""
+    from tools.price_history import _prepare_records
+
+    today = date.today()
+    df = _make_df(periods=5, end=today)
+
+    # Make all values NaN
+    for col in ["open", "high", "low", "close"]:
+        df[col] = np.nan
+
+    with pytest.raises(TickerNotFoundError) as exc_info:
+        _prepare_records(df, today - timedelta(days=4), today)
+
+    assert "No price data" in exc_info.value.user_message
+
+
+def test_price_history_zero_pct_change_neutral_trend() -> None:
+    """Test pct_change == 0 renders 'neutral' trend (line 168-170)."""
+    today = date.today()
+    df = _make_df(periods=5, end=today)
+
+    # Make all closes equal
+    df["Close"] = 100.0
+
+    with patch("tools.price_history.fetch_ohlcv", return_value=df):
+        app = price_history("AAPL")
+
+    rendered = _to_json(app)
+    row_children = rendered["view"]["children"][0]["children"]
+    metrics_row = next(c for c in row_children if c["type"] == "Row")
+    change_metric = next(m for m in metrics_row["children"] if m["label"] == "Change")
+
+    assert change_metric.get("trend") == "neutral"
+
+
+def test_price_history_negative_pct_change_down_trend() -> None:
+    """Test pct_change < 0 renders 'down' trend (line 165-166)."""
+    today = date.today()
+    df = _make_df(periods=5, end=today)
+
+    # Make the last close less than the first
+    closes = [100.0 + i for i in range(5)]
+    closes[-1] = 95.0
+    df["Close"] = closes
+
+    with patch("tools.price_history.fetch_ohlcv", return_value=df):
+        app = price_history("AAPL")
+
+    rendered = _to_json(app)
+    row_children = rendered["view"]["children"][0]["children"]
+    metrics_row = next(c for c in row_children if c["type"] == "Row")
+    change_metric = next(m for m in metrics_row["children"] if m["label"] == "Change")
+
+    assert change_metric.get("trend") == "down"
+
+
+def test_price_history_first_close_zero_pct_change_neutral() -> None:
+    """Test first_close == 0 guard (line 159-162)."""
+    today = date.today()
+    df = _make_df(periods=5, end=today)
+
+    df["Close"] = [0.0, 100.0, 102.0, 101.0, 105.0]
+
+    with patch("tools.price_history.fetch_ohlcv", return_value=df):
+        app = price_history("AAPL")
+
+    rendered = _to_json(app)
+    row_children = rendered["view"]["children"][0]["children"]
+    metrics_row = next(c for c in row_children if c["type"] == "Row")
+    change_metric = next(m for m in metrics_row["children"] if m["label"] == "Change")
+
+    assert change_metric["value"] == "+0.00%"
+    assert change_metric.get("trend") == "neutral"

@@ -352,3 +352,77 @@ def patch_fetch_by_symbol(prices: dict[str, float]) -> Any:
         return _make_price_df(prices[symbol])
 
     return patch("ui.portfolio.fetch_ohlcv", side_effect=side_effect)
+
+
+def test_snapshot_all_holdings_have_prices() -> None:
+    """Test total_pnl_pct computed when total_cost is not zero (line 300)."""
+    with patch_fetch(150.0):
+        add_holding("AAPL", 10, 100)
+        snapshot = _portfolio_snapshot()
+
+    assert snapshot["total_cost"] > 0.0
+    assert snapshot["total_pnl_pct"] is not None
+
+
+def test_snapshot_zero_cost_total_pnl_pct_none() -> None:
+    """Test total_pnl_pct == None when total_cost == 0 (lines 311-312)."""
+    with patch_fetch(100.0):
+        add_holding("AAPL", 10, 0.0)
+        snapshot = _portfolio_snapshot()
+
+    assert snapshot["total_cost"] == 0.0
+    assert snapshot["total_pnl_pct"] is None
+
+
+def test_snapshot_pnl_pct_with_zero_cost_basis() -> None:
+    """Test holding pnl_pct == None when cost == 0 (line 151)."""
+    with patch_fetch(100.0):
+        add_holding("AAPL", 10, 0.0)
+        snapshot = _portfolio_snapshot()
+
+    holding = snapshot["holdings"][0]
+    assert holding["cost"] == 0.0
+    assert holding["pnl_pct"] is None
+
+
+def test_search_tickers_invalid_ticker_format_returns_not_found() -> None:
+    """Test search_tickers with invalid format (lines 299-302)."""
+    results = search_tickers("???")
+
+    assert len(results) == 1
+    assert results[0]["status"] == "not_found"
+    assert "not a valid ticker" in results[0]["message"]
+
+
+def test_search_tickers_stock_data_error_returns_not_found() -> None:
+    """Test search_tickers catches StockDataError (lines 303-310)."""
+    with patch(
+        "ui.portfolio.fetch_ohlcv",
+        side_effect=TickerNotFoundError("No data found for ticker 'ZZZZ'."),
+    ):
+        results = search_tickers("zzzz")
+
+    assert len(results) == 1
+    assert results[0]["status"] == "not_found"
+
+
+def test_search_tickers_value_error_returns_not_found() -> None:
+    """Test search_tickers catches ValueError (line 311-312)."""
+    with patch("ui.portfolio.fetch_ohlcv", side_effect=ValueError("Some error")):
+        results = search_tickers("AAPL")
+
+    assert len(results) == 1
+    assert results[0]["status"] == "not_found"
+    assert "Some error" in results[0]["message"]
+
+
+def test_portfolio_dashboard_renders_with_price_error() -> None:
+    """Test portfolio dashboard renders holdings with price errors."""
+    with patch_fetch(150.0):
+        add_holding("AAPL", 10, 100)
+        app = portfolio_dashboard()
+
+    rendered = _to_json(app)
+    serialized = json.dumps(rendered)
+
+    assert '"variant": "destructive"' in serialized

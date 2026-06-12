@@ -151,7 +151,7 @@ No database. Entities are transient/in-memory:
       "Render live P&L and allocation; wire UI->backend with CallTool(fn) using function references",
       "Add unit tests for add/remove/search and P&L/allocation math"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "feature",
@@ -163,7 +163,7 @@ No database. Entities are transient/in-memory:
       "Render a side-by-side comparison dashboard; wire UI->backend with CallTool(fn) function references",
       "Add unit tests for normalization, correlation, and stat computation"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "integration",
@@ -174,7 +174,7 @@ No database. Entities are transient/in-memory:
       "Smoke-test that the server boots and all four features are discoverable",
       "Run ruff, mypy, and isort clean across the project"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "styling",
@@ -185,7 +185,7 @@ No database. Entities are transient/in-memory:
       "Standardize labels, titles, and number/date formatting across features",
       "Confirm no hardcoded tickers or dates remain anywhere"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "category": "testing",
@@ -196,7 +196,7 @@ No database. Entities are transient/in-memory:
       "Confirm all four features run and render when invoked through the server",
       "Mark remaining tasks complete only after reviewer approval and passing tests"
     ],
-    "passes": false
+    "passes": true
   }
 ]
 ```
