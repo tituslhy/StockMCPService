@@ -1,0 +1,46 @@
+# yaml-language-server: $schema=https://storage.googleapis.com/coderabbit_public_assets/schema.v2.json
+
+language: "en-US"
+
+reviews:
+  profile: "chill"
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  sequence_diagrams: false
+  assess_linked_issues: false
+  related_issues: false
+  related_prs: false
+  suggested_labels: false
+  suggested_reviewers: false
+  auto_review:
+    enabled: true
+    drafts: false
+
+  tone_instructions: >
+    Be relaxed and pragmatic. Only flag real bugs, security issues, and
+    logic correctness problems. Do not comment on style, formatting, naming, or
+    other minor preferences -- ruff, mypy, and isort already enforce those.
+    Skip "nitpick" comments entirely. Keep remaining comments short.
+
+  finishing_touches:
+    docstrings:
+      enabled: false
+    unit_tests:
+      enabled: false
+
+  path_filters:
+    # Only review the core service code.
+    - "main.py"
+    - "tools/**"
+    - "ui/**"
+    # Never review docs, agent/skill config, or non-code files.
+    - "!**/*.md"
+    - "!.claude/**"
+    - "!**/__pycache__/**"
+    - "!**/*.pyc"
+
+chat:
+  auto_reply: true
